@@ -1,0 +1,8 @@
+name: backend
+files:
+  - source: github/workflows/ci.yml
+    target: .github/workflows/ci.yml
+  - source: templates/backend.env.example
+    target: .env.example
+  - source: agents/reviewer.md
+    target: .github/agents/reviewer.md
