@@ -1,0 +1,8 @@
+name: webapp
+files:
+  - source: github/workflows/ci.yml
+    target: .github/workflows/ci.yml
+  - source: devcontainer/devcontainer.json
+    target: .devcontainer/devcontainer.json
+  - source: templates/webapp.env.example
+    target: .env.example

@@ -1,0 +1,4 @@
+{
+  "name": "repo-kit-dev",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu"
+}

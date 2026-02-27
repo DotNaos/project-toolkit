@@ -1,0 +1,6 @@
+name: default
+files:
+  - source: github/workflows/ci.yml
+    target: .github/workflows/ci.yml
+  - source: templates/CODEOWNERS
+    target: .github/CODEOWNERS
