@@ -1,6 +1,7 @@
 package syncer
 
 import (
+	"bytes"
 	"os/exec"
 	"path/filepath"
 
@@ -44,17 +45,5 @@ func gitSHA(dir string) string {
 	if err != nil {
 		return "unknown"
 	}
-	return string(bytesTrimSpace(out))
-}
-
-func bytesTrimSpace(b []byte) []byte {
-	start := 0
-	for start < len(b) && (b[start] == ' ' || b[start] == '\n' || b[start] == '\t' || b[start] == '\r') {
-		start++
-	}
-	end := len(b)
-	for end > start && (b[end-1] == ' ' || b[end-1] == '\n' || b[end-1] == '\t' || b[end-1] == '\r') {
-		end--
-	}
-	return b[start:end]
+	return string(bytes.TrimSpace(out))
 }

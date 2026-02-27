@@ -47,7 +47,7 @@ func Read(target string) (RepositoryConfig, error) {
 		return RepositoryConfig{}, err
 	}
 	if cfg.Manifest == "" {
-		return RepositoryConfig{}, fmt.Errorf("manifest is required")
+		return RepositoryConfig{}, fmt.Errorf("manifest is required in .repo-kit/config.yaml")
 	}
 	return cfg, nil
 }

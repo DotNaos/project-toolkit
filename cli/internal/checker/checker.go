@@ -17,7 +17,7 @@ func Drift(target string) ([]string, error) {
 	for _, file := range l.Files {
 		current, err := filesystem.FileSHA256(filepath.Join(target, file.Target))
 		if err != nil {
-			drift = append(drift, fmt.Sprintf("missing: %s", file.Target))
+			drift = append(drift, fmt.Sprintf("missing: %s (%v)", file.Target, err))
 			continue
 		}
 		if current != file.SHA256 {

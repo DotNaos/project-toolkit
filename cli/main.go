@@ -92,14 +92,8 @@ func runCheck(args []string) error {
 }
 
 func runUpdate(args []string) error {
-	fs := flag.NewFlagSet("update", flag.ContinueOnError)
-	target := fs.String("target", ".", "target repository path")
-	kitRoot := fs.String("kit-root", ".", "repo-kit source path")
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
-
-	return syncer.Sync(filepath.Clean(*target), filepath.Clean(*kitRoot))
+	// update intentionally reuses sync behavior: refresh lock metadata and materialized files.
+	return runSync(args)
 }
 
 func die(err error) {
