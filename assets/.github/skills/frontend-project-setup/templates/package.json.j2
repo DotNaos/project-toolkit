@@ -1,0 +1,37 @@
+{
+  "name": "{{ package_name | default('frontend-app') }}",
+  "version": "{{ version | default('0.1.0') }}",
+  "private": {{ private | default(true) | lower }},
+  "type": "{{ module_type | default('module') }}",
+  "description": "{{ description | default('Frontend application') }}",
+  "scripts": {
+    "dev": "{{ scripts.dev | default('vite') }}",
+    "build": "{{ scripts.build | default('vite build') }}",
+    "preview": "{{ scripts.preview | default('vite preview') }}",
+    "test": "{{ scripts.test | default('vitest run') }}",
+    "lint": "{{ scripts.lint | default('eslint .') }}",
+    "format": "{{ scripts.format | default('prettier --write .') }}"
+  },
+  "dependencies": {
+{% for dep, dep_version in dependencies | default({'react': '^19.0.0', 'react-dom': '^19.0.0'}) | dictsort %}
+    "{{ dep }}": "{{ dep_version }}"{% if not loop.last %},{% endif %}
+{% endfor %}
+  },
+  "devDependencies": {
+{% for dep, dep_version in dev_dependencies | default({'vite': '^7.0.0', 'typescript': '^5.8.0', 'eslint': '^9.0.0', 'prettier': '^3.0.0', 'vitest': '^3.0.0'}) | dictsort %}
+    "{{ dep }}": "{{ dep_version }}"{% if not loop.last %},{% endif %}
+{% endfor %}
+  }{% if engines is defined %},
+  "engines": {
+{% for key, value in engines | dictsort %}
+    "{{ key }}": "{{ value }}"{% if not loop.last %},{% endif %}
+{% endfor %}
+  }{% endif %}{% if lint_staged is defined %},
+  "lint-staged": {
+{% for pattern, command in lint_staged | dictsort %}
+    "{{ pattern }}": "{{ command }}"{% if not loop.last %},{% endif %}
+{% endfor %}
+  }{% endif %}{% if browserslist is defined %},
+  "browserslist": {{ browserslist | tojson }}
+{% endif %}
+}

@@ -4,3 +4,17 @@ files:
     target: .github/workflows/ci.yml
   - source: templates/CODEOWNERS
     target: .github/CODEOWNERS
+  - source: github/skills/mobile-expo-codespaces/SKILL.md
+    target: .github/skills/mobile-expo-codespaces/SKILL.md
+  - source: github/skills/mobile-expo-codespaces/scripts/doctor.sh
+    target: .github/skills/mobile-expo-codespaces/scripts/doctor.sh
+  - source: github/skills/mobile-expo-codespaces/scripts/start-tunnel.sh
+    target: .github/skills/mobile-expo-codespaces/scripts/start-tunnel.sh
+  - source: github/skills/mobile-expo-codespaces/references/pipelines/eas-build.yml.j2
+    target: .github/skills/mobile-expo-codespaces/references/pipelines/eas-build.yml.j2
+  - source: github/skills/mobile-expo-codespaces/references/pipelines/eas-build-submit-update.yml.j2
+    target: .github/skills/mobile-expo-codespaces/references/pipelines/eas-build-submit-update.yml.j2
+  - source: github/skills/frontend-project-setup/SKILL.md
+    target: .github/skills/frontend-project-setup/SKILL.md
+  - source: github/skills/frontend-project-setup/templates/package.json.j2
+    target: .github/skills/frontend-project-setup/templates/package.json.j2

@@ -1,0 +1,50 @@
+name: {{ workflow_name | default('EAS Build + Submit + Update') }}
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+{% for branch in trigger_branches | default(['main']) %}
+      - {{ branch }}
+{% endfor %}
+
+jobs:
+  release:
+    runs-on: {{ runner | default('ubuntu-latest') }}
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: {{ node_version | default('22') }}
+
+{% if package_manager | default('bun') == 'bun' %}
+      - uses: oven-sh/setup-bun@v2
+{% endif %}
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+{% if package_manager | default('bun') == 'bun' %}
+          packager: bun
+{% endif %}
+
+      - name: Install dependencies
+        run: {{ install_cmd | default('bun install --frozen-lockfile') }}
+
+      - name: Build
+        run: eas build --platform {{ eas_platform | default('all') }} --profile {{ build_profile | default('production') }} --non-interactive --no-wait
+
+{% if enable_submit | default(true) %}
+      - name: Submit
+        run: eas submit --platform {{ eas_platform | default('all') }} --profile {{ submit_profile | default('production') }} --non-interactive
+{% endif %}
+
+{% if enable_update | default(true) %}
+      - name: Publish update
+        run: eas update --branch {{ update_branch | default('production') }} --message "{{ update_message | default('CI update') }}"
+{% endif %}
