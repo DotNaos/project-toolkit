@@ -7,9 +7,13 @@ import (
 	"strings"
 
 	"github.com/DotNaos/project-toolkit/internal/auth"
+	"github.com/DotNaos/project-toolkit/internal/devcmd"
+	"github.com/DotNaos/project-toolkit/internal/exitcode"
 	"github.com/DotNaos/project-toolkit/internal/nodebridge"
 	"github.com/DotNaos/project-toolkit/internal/projectconfig"
 	"github.com/DotNaos/project-toolkit/internal/projectinit"
+	"github.com/DotNaos/project-toolkit/internal/repocontext"
+	"github.com/DotNaos/project-toolkit/internal/sessionlog"
 	"github.com/DotNaos/project-toolkit/internal/skillcatalog"
 	"github.com/DotNaos/project-toolkit/internal/workspace"
 	"github.com/DotNaos/project-toolkit/internal/worktree"
@@ -206,10 +210,18 @@ func newDevCommand() *cobra.Command {
 		Use:   "dev [--] <command...>",
 		Short: "Run a local development command with logging",
 		Args:  cobra.ArbitraryArgs,
-		RunE: func(_ *cobra.Command, args []string) error {
-			bridgeArgs := []string{"dev"}
-			bridgeArgs = append(bridgeArgs, args...)
-			return nodebridge.Run(bridgeArgs)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			result, logFilePath, err := runDevCommand(args, cmd.OutOrStdout(), cmd.ErrOrStderr())
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintf(cmd.OutOrStdout(), "Session log: %s\n", logFilePath)
+			if result.ExitCode != 0 {
+				return &exitcode.Error{Code: result.ExitCode}
+			}
+
+			return nil
 		},
 	}
 }
@@ -501,4 +513,106 @@ func resolveWorkingDirectory() (string, error) {
 	}
 
 	return cwd, nil
+}
+
+func runDevCommand(args []string, stdout io.Writer, stderr io.Writer) (devcmd.Result, string, error) {
+	cwd, err := resolveWorkingDirectory()
+	if err != nil {
+		return devcmd.Result{}, "", err
+	}
+
+	config, err := projectconfig.Load(cwd)
+	if err != nil {
+		return devcmd.Result{}, "", err
+	}
+
+	repoContext, err := repocontext.Collect(cwd)
+	if err != nil {
+		return devcmd.Result{}, "", err
+	}
+
+	log, err := sessionlog.Create(repoContext.CWD, repoContext.GitRoot, config)
+	if err != nil {
+		return devcmd.Result{}, "", err
+	}
+
+	if err := appendDevSessionContext(log, repoContext, config, args); err != nil {
+		return devcmd.Result{}, log.FilePath, err
+	}
+
+	result, err := devcmd.Run(devcmd.RunOptions{
+		Args:        args,
+		Config:      config,
+		RepoContext: repoContext,
+		SessionLog:  log,
+		Stdout:      stdout,
+		Stderr:      stderr,
+		Env:         os.Environ(),
+	})
+	return result, log.FilePath, err
+}
+
+func appendDevSessionContext(log *sessionlog.Log, repoContext repocontext.Context, config projectconfig.Config, commandArgs []string) error {
+	projectName := any(nil)
+	if config.Project != nil && config.Project.Name != "" {
+		projectName = config.Project.Name
+	}
+
+	payload := map[string]any{
+		"sessionKind":     "dev",
+		"projectName":     projectName,
+		"gitBranch":       emptyStringToNil(repoContext.GitBranch),
+		"gitRoot":         emptyStringToNil(repoContext.GitRoot),
+		"topLevelEntries": limitStrings(repoContext.TopLevelEntries, 20),
+		"commandArgs":     limitStrings(commandArgs, 20),
+		"filePreviews":    limitFilePreviews(repoContext.FilePreviews, 3),
+	}
+
+	return log.Append(sessionlog.Event{
+		Source:    "cli",
+		EventType: "session.context",
+		Level:     "info",
+		Message:   "Captured dev session context",
+		Payload:   payload,
+	})
+}
+
+func limitStrings(values []string, limit int) []string {
+	if len(values) <= limit {
+		return values
+	}
+
+	return values[:limit]
+}
+
+func limitFilePreviews(previews []repocontext.FilePreview, limit int) []map[string]any {
+	if len(previews) > limit {
+		previews = previews[:limit]
+	}
+
+	result := make([]map[string]any, 0, len(previews))
+	for _, preview := range previews {
+		result = append(result, map[string]any{
+			"path":    preview.Path,
+			"preview": truncate(preview.Preview, 400),
+		})
+	}
+
+	return result
+}
+
+func emptyStringToNil(value string) any {
+	if value == "" {
+		return nil
+	}
+
+	return value
+}
+
+func truncate(value string, maxLength int) string {
+	if len(value) <= maxLength {
+		return value
+	}
+
+	return value[:maxLength] + "..."
 }
