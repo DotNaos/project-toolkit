@@ -9,8 +9,11 @@ import (
 	"github.com/DotNaos/project-toolkit/internal/projectconfig"
 	"github.com/DotNaos/project-toolkit/internal/projectinit"
 	"github.com/DotNaos/project-toolkit/internal/workspace"
+	"github.com/DotNaos/project-toolkit/internal/worktree"
 	"github.com/spf13/cobra"
 )
+
+const resolveWorkingDirectoryErrorMessage = "failed to resolve working directory: %w"
 
 func NewRootCommand() *cobra.Command {
 	rootCmd := &cobra.Command{
@@ -72,9 +75,9 @@ func newProjectInitCommand() *cobra.Command {
 		Short: "Initialize project-toolkit scaffold files",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cwd, err := os.Getwd()
+			cwd, err := resolveWorkingDirectory()
 			if err != nil {
-				return fmt.Errorf("failed to resolve working directory: %w", err)
+				return err
 			}
 
 			result, err := projectinit.Initialize(cwd, force)
@@ -142,22 +145,14 @@ func newProjectWorktreeCommand() *cobra.Command {
 		Use:   "create <name>",
 		Short: "Create a managed worktree and matching workspace",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
-			bridgeArgs := []string{"project", "worktree", "create", args[0]}
-			if branch != "" {
-				bridgeArgs = append(bridgeArgs, "--branch", branch)
-			}
-			if base != "" {
-				bridgeArgs = append(bridgeArgs, "--base", base)
-			}
-			if workspace != "" {
-				bridgeArgs = append(bridgeArgs, "--workspace", workspace)
-			}
-			if output != "" {
-				bridgeArgs = append(bridgeArgs, "--output", output)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			result, err := runProjectWorktreeCreate(args[0], branch, base, workspace, output)
+			if err != nil {
+				return err
 			}
 
-			return nodebridge.Run(bridgeArgs)
+			printProjectWorktreeCreateResult(cmd.OutOrStdout(), result)
+			return nil
 		},
 	}
 
@@ -283,9 +278,9 @@ func printFileGroup(writer io.Writer, label string, files []string) {
 }
 
 func runProjectWorkspaceGenerate(name, root, output string) (workspace.GenerateResult, error) {
-	cwd, err := os.Getwd()
+	cwd, err := resolveWorkingDirectory()
 	if err != nil {
-		return workspace.GenerateResult{}, fmt.Errorf("failed to resolve working directory: %w", err)
+		return workspace.GenerateResult{}, err
 	}
 
 	config, err := projectconfig.Load(cwd)
@@ -328,4 +323,56 @@ func printProjectWorkspaceGenerateResult(writer io.Writer, result workspace.Gene
 
 		fmt.Fprintf(writer, "- [%s] %s -> %s%s\n", sharedLink.Status, sharedLink.Path, sharedLink.TargetPath, reason)
 	}
+}
+
+func runProjectWorktreeCreate(worktreeName, branch, base, workspaceName, output string) (worktree.CreateResult, error) {
+	cwd, err := resolveWorkingDirectory()
+	if err != nil {
+		return worktree.CreateResult{}, err
+	}
+
+	config, err := projectconfig.Load(cwd)
+	if err != nil {
+		return worktree.CreateResult{}, err
+	}
+
+	return worktree.Create(worktree.CreateOptions{
+		CWD:                 cwd,
+		Config:              config,
+		WorktreeName:        worktreeName,
+		BranchName:          branch,
+		BaseRef:             base,
+		WorkspaceName:       workspaceName,
+		WorkspaceOutputPath: output,
+	})
+}
+
+func printProjectWorktreeCreateResult(writer io.Writer, result worktree.CreateResult) {
+	fmt.Fprintf(writer, "Created worktree: %s\n", result.WorktreePath)
+	fmt.Fprintf(writer, "Branch: %s\n", result.BranchName)
+	fmt.Fprintf(writer, "Git root: %s\n", result.GitRoot)
+	fmt.Fprintf(writer, "Workspace file: %s\n", result.Workspace.OutputPath)
+
+	if len(result.Workspace.SharedLinks) == 0 {
+		return
+	}
+
+	fmt.Fprintln(writer, "Shared links:")
+	for _, sharedLink := range result.Workspace.SharedLinks {
+		reason := ""
+		if sharedLink.Reason != "" {
+			reason = fmt.Sprintf(" (%s)", sharedLink.Reason)
+		}
+
+		fmt.Fprintf(writer, "- [%s] %s -> %s%s\n", sharedLink.Status, sharedLink.Path, sharedLink.TargetPath, reason)
+	}
+}
+
+func resolveWorkingDirectory() (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf(resolveWorkingDirectoryErrorMessage, err)
+	}
+
+	return cwd, nil
 }

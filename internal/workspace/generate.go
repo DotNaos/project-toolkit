@@ -48,7 +48,11 @@ func Generate(options GenerateOptions) (GenerateResult, error) {
 	projectKey := projectpaths.DeriveProjectKey(options.CWD, options.Config)
 	targetRoot := options.CWD
 	if strings.TrimSpace(options.TargetRoot) != "" {
-		targetRoot = filepath.Join(options.CWD, options.TargetRoot)
+		if filepath.IsAbs(options.TargetRoot) {
+			targetRoot = options.TargetRoot
+		} else {
+			targetRoot = filepath.Join(options.CWD, options.TargetRoot)
+		}
 	}
 	targetRoot = filepath.Clean(targetRoot)
 

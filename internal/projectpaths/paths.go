@@ -36,6 +36,10 @@ func GetGeneratedWorkspacePath(projectKey, workspaceName string) string {
 	return filepath.Join(GetProjectStateRoot(projectKey), "workspaces", workspaceName+".code-workspace")
 }
 
+func GetManagedWorktreePath(projectKey, worktreeName string) string {
+	return filepath.Join(GetProjectStateRoot(projectKey), "worktrees", worktreeName)
+}
+
 func slugify(value string) string {
 	normalized := strings.TrimSpace(strings.ToLower(value))
 	normalized = slugPattern.ReplaceAllString(normalized, "-")
