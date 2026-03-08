@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
-import { RepoKitError } from "./errors.js";
+import { ProjectToolkitError } from "./errors.js";
 import type { LoadedSkill, SkillSummary } from "./types.js";
 
 interface ParsedMarkdown {
@@ -28,13 +28,13 @@ export async function loadSkill(skillsRoot: string, skillId: string): Promise<Lo
   try {
     await fs.access(rootDir);
   } catch {
-    throw new RepoKitError(`Unknown skill: ${skillId}`);
+    throw new ProjectToolkitError(`Unknown skill: ${skillId}`);
   }
 
   const skill = await inspectSkill(rootDir, skillId);
   if (!skill.valid) {
     const detail = skill.errors.length > 0 ? ` (${skill.errors.join("; ")})` : "";
-    throw new RepoKitError(`Skill "${skillId}" is not runnable${detail}`);
+    throw new ProjectToolkitError(`Skill "${skillId}" is not runnable${detail}`);
   }
 
   return skill;
@@ -146,7 +146,7 @@ async function inspectMarkdownFallback(rootDir: string, skillId: string): Promis
 
   const [markdownFile] = markdownFiles;
   if (!markdownFile) {
-    throw new RepoKitError(`Unable to resolve markdown fallback for ${skillId}`);
+    throw new ProjectToolkitError(`Unable to resolve markdown fallback for ${skillId}`);
   }
 
   const promptPath = path.join(rootDir, markdownFile);

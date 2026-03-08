@@ -1,6 +1,6 @@
+import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import type { RepoContext, RepoContextFilePreview } from "./types.js";
 
@@ -12,7 +12,7 @@ const KEY_FILE_CANDIDATES = [
   "go.mod",
   "Makefile",
   "Dockerfile",
-  ".repo-kit/config.yaml",
+  ".project-toolkit/config.yaml",
 ];
 
 export async function collectRepoContext(cwd: string): Promise<RepoContext> {

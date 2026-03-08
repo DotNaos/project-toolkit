@@ -1,45 +1,46 @@
 {
-  "name": "@dotnaos/repo-kit",
-  "version": "1.0.0",
-  "description": "Minimal repository task runner powered by the Codex SDK.",
-  "license": "UNLICENSED",
-  "type": "module",
-  "bin": {
-    "repo-kit": "dist/cli/index.js"
-  },
-  "files": [
-    "dist",
-    "skills",
-    "README.md"
-  ],
-  "engines": {
-    "node": ">=18"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/DotNaos/repo-kit.git"
-  },
-  "homepage": "https://github.com/DotNaos/repo-kit#readme",
-  "bugs": {
-    "url": "https://github.com/DotNaos/repo-kit/issues"
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
-  },
-  "scripts": {
-    "clean": "rm -rf dist",
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "dev": "node --import tsx src/cli/index.ts"
-  },
-  "dependencies": {
-    "@openai/codex-sdk": "^0.111.0",
-    "yaml": "^2.8.1"
-  },
-  "devDependencies": {
-    "@types/node": "^24.0.0",
-    "tsx": "^4.20.6",
-    "typescript": "^5.9.2"
-  }
+    "name": "@dotnaos/project-toolkit",
+    "version": "1.0.0",
+    "description": "Project operations toolkit for skills, agent workflows, and repository automation powered by the Codex SDK.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "bin": {
+        "pkit": "dist/cli/index.js",
+        "project-toolkit": "dist/cli/index.js"
+    },
+    "files": [
+        "dist",
+        "skills",
+        "README.md"
+    ],
+    "engines": {
+        "node": ">=18"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DotNaos/project-toolkit.git"
+    },
+    "homepage": "https://github.com/DotNaos/project-toolkit#readme",
+    "bugs": {
+        "url": "https://github.com/DotNaos/project-toolkit/issues"
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com",
+        "access": "restricted"
+    },
+    "scripts": {
+        "clean": "rm -rf dist",
+        "build": "tsc -p tsconfig.json",
+        "typecheck": "tsc --noEmit -p tsconfig.json",
+        "dev": "node --import tsx src/cli/index.ts"
+    },
+    "dependencies": {
+        "@openai/codex-sdk": "^0.111.0",
+        "yaml": "^2.8.1"
+    },
+    "devDependencies": {
+        "@types/node": "^24.0.0",
+        "tsx": "^4.20.6",
+        "typescript": "^5.9.2"
+    }
 }

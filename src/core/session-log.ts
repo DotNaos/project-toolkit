@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type {
-    RepoKitConfig,
+    ProjectToolkitConfig,
     SessionLog,
     SessionLogEvent,
     SessionLogEventInput,
@@ -11,7 +11,7 @@ import type {
 interface CreateSessionLogOptions {
   cwd: string;
   gitRoot: string | null;
-  config: RepoKitConfig;
+  config: ProjectToolkitConfig;
 }
 
 export async function createSessionLog(options: CreateSessionLogOptions): Promise<SessionLog> {
@@ -44,10 +44,10 @@ export async function createSessionLog(options: CreateSessionLogOptions): Promis
   };
 }
 
-function resolveLogsDir(cwd: string, config: RepoKitConfig): string {
+function resolveLogsDir(cwd: string, config: ProjectToolkitConfig): string {
   const configuredDir = config.logs?.dir;
   if (!configuredDir) {
-    return path.join(cwd, "logs", "repo-kit");
+    return path.join(cwd, "logs", "project-toolkit");
   }
 
   return path.isAbsolute(configuredDir) ? configuredDir : path.resolve(cwd, configuredDir);

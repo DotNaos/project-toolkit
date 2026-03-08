@@ -1,13 +1,13 @@
 # Publishing
 
-`repo-kit` publishes to GitHub Packages only.
+`project-toolkit` publishes to GitHub Packages only.
 
 ## Consumer Install
 
 ```bash
 npm config set @dotnaos:registry https://npm.pkg.github.com
 export NODE_AUTH_TOKEN=YOUR_GITHUB_TOKEN
-npm install @dotnaos/repo-kit
+npm install @dotnaos/project-toolkit
 ```
 
 `NODE_AUTH_TOKEN` should be a GitHub token that can read packages.

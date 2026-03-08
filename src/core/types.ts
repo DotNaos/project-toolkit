@@ -33,7 +33,7 @@ export interface AuthStatus {
   source: "OPENAI_API_KEY";
 }
 
-export interface RepoKitConfig {
+export interface ProjectToolkitConfig {
   dev?: {
     command?: string;
   };

@@ -1,20 +1,20 @@
 import {
-  Codex,
-  type FileChangeItem,
-  type RunResult,
-  type ThreadItem,
-  type ThreadOptions,
+    Codex,
+    type FileChangeItem,
+    type RunResult,
+    type ThreadItem,
+    type ThreadOptions,
 } from "@openai/codex-sdk";
 import { getApiKey } from "../../core/auth.js";
-import { RepoKitError } from "../../core/errors.js";
+import { ProjectToolkitError } from "../../core/errors.js";
 import { renderRepoContext } from "../../core/repo-context.js";
 import type {
-  AgentAdapter,
-  ExecutionUsage,
-  PlanExecutionResult,
-  PlannedChanges,
-  SkillExecutionInput,
-  TaskExecutionResult,
+    AgentAdapter,
+    ExecutionUsage,
+    PlanExecutionResult,
+    PlannedChanges,
+    SkillExecutionInput,
+    TaskExecutionResult,
 } from "../../core/types.js";
 
 const PLAN_SCHEMA = {
@@ -39,7 +39,7 @@ export class CodexSdkAdapter implements AgentAdapter {
 
   constructor(apiKey = getApiKey()) {
     if (!apiKey) {
-      throw new RepoKitError("OPENAI_API_KEY is required");
+      throw new ProjectToolkitError("OPENAI_API_KEY is required");
     }
 
     this.codex = new Codex({ apiKey });
@@ -79,7 +79,7 @@ function buildThreadOptions(input: SkillExecutionInput, mode: "plan" | "run"): T
 
 function buildPlanPrompt(input: SkillExecutionInput): string {
   return [
-    "You are running inside repo-kit planning mode.",
+    "You are running inside project-toolkit planning mode.",
     "Produce a concise, non-destructive implementation plan for the selected skill.",
     "Do not modify files, generate patches, or execute destructive commands.",
     "Stay within the selected skill's scope and the repository state shown below.",
@@ -91,7 +91,7 @@ function buildPlanPrompt(input: SkillExecutionInput): string {
 
 function buildRunPrompt(input: SkillExecutionInput): string {
   return [
-    "You are running inside repo-kit execution mode.",
+    "You are running inside project-toolkit execution mode.",
     "Apply the selected skill to the repository in the current working directory.",
     "Keep the change set minimal, production-ready, and within the selected skill's scope.",
     "If you are blocked, explain the blocker clearly in the final response.",

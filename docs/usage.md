@@ -9,37 +9,37 @@
 ## Commands
 
 ```bash
-repo-kit skills list
-repo-kit plan <skill-id>
-repo-kit run <skill-id>
-repo-kit dev [--] <command...>
-repo-kit auth status
+pkit skills list
+pkit plan <skill-id>
+pkit run <skill-id>
+pkit dev [--] <command...>
+pkit auth status
 ```
 
 ## Repository config
 
-`repo-kit` optionally reads `.repo-kit/config.yaml` from the current working directory.
+`project-toolkit` optionally reads `.project-toolkit/config.yaml` from the current working directory.
 
 ```yaml
 dev:
     command: npm run dev
 logs:
-    dir: logs/repo-kit
+    dir: logs/project-toolkit
 project:
     name: my-service
 ```
 
-- `dev.command`: shell command used by `repo-kit dev` when no explicit command is passed
-- `logs.dir`: directory for JSONL session logs; defaults to `logs/repo-kit` under the current working directory
+- `dev.command`: shell command used by `pkit dev` when no explicit command is passed
+- `logs.dir`: directory for JSONL session logs; defaults to `logs/project-toolkit` under the current working directory
 - `project.name`: optional project label recorded in session log metadata
 
-### `repo-kit skills list`
+### `pkit skills list`
 
 - Scans first-level directories under `skills/`
 - Prints the skill id, title when available, and whether the entry looks runnable
 - Marks asset-only directories as invalid until they have a prompt definition
 
-### `repo-kit plan <skill-id>`
+### `pkit plan <skill-id>`
 
 - Loads the selected skill from the packaged `skills/` directory
 - Collects a small repository summary from the current working directory
@@ -47,7 +47,7 @@ project:
 - Prints the intended plan without applying changes
 - Writes a JSONL session log for the invocation
 
-### `repo-kit run <skill-id>`
+### `pkit run <skill-id>`
 
 - Loads the selected skill from the packaged `skills/` directory
 - Collects the same minimal repository context
@@ -55,14 +55,14 @@ project:
 - Prints the final response, changed files, and executed commands when available
 - Writes a JSONL session log for the invocation
 
-### `repo-kit dev [--] <command...>`
+### `pkit dev [--] <command...>`
 
 - Runs an explicit command directly from the CLI arguments
-- If no explicit command is provided, falls back to `.repo-kit/config.yaml` `dev.command`
+- If no explicit command is provided, falls back to `.project-toolkit/config.yaml` `dev.command`
 - Streams stdout and stderr to the terminal while also recording line-oriented JSONL events
-- Preserves the wrapped command's exit code via the `repo-kit` process exit status
+- Preserves the wrapped command's exit code via the `pkit` process exit status
 
-### `repo-kit auth status`
+### `pkit auth status`
 
 - Checks `OPENAI_API_KEY`
 - Reports whether v1 authentication is available
@@ -85,7 +85,7 @@ Install:
 ```bash
 npm config set @dotnaos:registry https://npm.pkg.github.com
 export NODE_AUTH_TOKEN=YOUR_GITHUB_TOKEN
-npm install @dotnaos/repo-kit
+npm install @dotnaos/project-toolkit
 ```
 
 Publish:

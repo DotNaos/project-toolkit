@@ -1,11 +1,11 @@
 import { spawn } from "node:child_process";
 import process from "node:process";
-import { RepoKitError } from "./errors.js";
-import type { RepoContext, RepoKitConfig, SessionLog, SessionLogLevel } from "./types.js";
+import { ProjectToolkitError } from "./errors.js";
+import type { ProjectToolkitConfig, RepoContext, SessionLog, SessionLogLevel } from "./types.js";
 
 interface DevWrapperOptions {
   args: string[];
-  config: RepoKitConfig;
+  config: ProjectToolkitConfig;
   repoContext: RepoContext;
   sessionLog: SessionLog;
 }
@@ -76,7 +76,7 @@ export async function runDevWrapper(options: DevWrapperOptions): Promise<number>
         command: resolved.displayCommand,
         message: error.message,
       });
-      reject(new RepoKitError(`Failed to start dev command: ${resolved.displayCommand}`));
+      reject(new ProjectToolkitError(`Failed to start dev command: ${resolved.displayCommand}`));
     });
 
     child.once("close", async (code, signal) => {
@@ -101,7 +101,7 @@ export async function runDevWrapper(options: DevWrapperOptions): Promise<number>
   });
 }
 
-function resolveDevCommand(args: string[], config: RepoKitConfig): ResolvedDevCommand {
+function resolveDevCommand(args: string[], config: ProjectToolkitConfig): ResolvedDevCommand {
   const normalizedArgs = args[0] === "--" ? args.slice(1) : args;
   const explicitCommand = normalizedArgs[0];
 
@@ -124,7 +124,7 @@ function resolveDevCommand(args: string[], config: RepoKitConfig): ResolvedDevCo
     };
   }
 
-  throw new RepoKitError("Usage: repo-kit dev [--] <command...> or configure .repo-kit/config.yaml dev.command");
+  throw new ProjectToolkitError("Usage: pkit dev [--] <command...> or configure .project-toolkit/config.yaml dev.command");
 }
 
 function forwardOutput(options: {

@@ -1,6 +1,6 @@
 # Architecture
 
-`repo-kit` v1 is a small TypeScript CLI with one agent backend and filesystem-based skill discovery.
+`project-toolkit` v1 starts as a TypeScript CLI with one agent backend and filesystem-based skill discovery, with room to expand into broader project operations.
 
 ## Source Layout
 
@@ -28,7 +28,7 @@
 1. The CLI resolves the packaged `skills/` directory.
 2. `skills list` inspects each first-level skill directory and reports whether it is runnable.
 3. `plan` and `run` load a single skill, collect minimal context from the current working directory, and require a Git repository.
-4. `plan`, `run`, and `dev` load `.repo-kit/config.yaml` when present.
+4. `plan`, `run`, and `dev` load `.project-toolkit/config.yaml` when present.
 5. `plan` and `run` create a per-session JSONL log file before invoking the adapter.
 6. The Codex adapter starts a thread with the current repository as the working directory and the selected skill directory exposed via `additionalDirectories`.
 7. `plan` uses read-only sandboxing and a structured JSON plan schema.
@@ -52,7 +52,7 @@ Directories without a prompt definition are intentionally left invalid instead o
 
 ## Logging and config MVP
 
-- Configuration is optional and repository-local at `.repo-kit/config.yaml`.
-- Session logs are JSONL files written to `logs/repo-kit/` by default, or to `logs.dir` when configured.
+- Configuration is optional and repository-local at `.project-toolkit/config.yaml`.
+- Session logs are JSONL files written to `logs/project-toolkit/` by default, or to `logs.dir` when configured.
 - Each session log entry includes a timestamp, random session id, cwd, git root, event source, event type, severity, and optional command or skill metadata.
 - The CLI keeps human-readable terminal output separate from structured logs so local workflows stay friendly while automation stays inspectable.

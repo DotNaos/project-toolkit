@@ -1,12 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
-import { RepoKitError } from "./errors.js";
-import type { RepoKitConfig } from "./types.js";
+import { ProjectToolkitError } from "./errors.js";
+import type { ProjectToolkitConfig } from "./types.js";
 
-const CONFIG_RELATIVE_PATH = path.join(".repo-kit", "config.yaml");
+const CONFIG_RELATIVE_PATH = path.join(".project-toolkit", "config.yaml");
 
-export async function loadRepoKitConfig(cwd: string): Promise<RepoKitConfig> {
+export async function loadProjectToolkitConfig(cwd: string): Promise<ProjectToolkitConfig> {
   const configPath = path.join(cwd, CONFIG_RELATIVE_PATH);
 
   let source: string;
@@ -17,14 +17,14 @@ export async function loadRepoKitConfig(cwd: string): Promise<RepoKitConfig> {
       return {};
     }
 
-    throw new RepoKitError(`Failed to read ${CONFIG_RELATIVE_PATH}: ${getErrorMessage(error)}`);
+    throw new ProjectToolkitError(`Failed to read ${CONFIG_RELATIVE_PATH}: ${getErrorMessage(error)}`);
   }
 
   let parsed: unknown;
   try {
     parsed = parseYaml(source);
   } catch (error) {
-    throw new RepoKitError(`Invalid ${CONFIG_RELATIVE_PATH}: ${getErrorMessage(error)}`);
+    throw new ProjectToolkitError(`Invalid ${CONFIG_RELATIVE_PATH}: ${getErrorMessage(error)}`);
   }
 
   if (parsed == null) {
@@ -32,13 +32,13 @@ export async function loadRepoKitConfig(cwd: string): Promise<RepoKitConfig> {
   }
 
   if (!isRecord(parsed)) {
-    throw new RepoKitError(`${CONFIG_RELATIVE_PATH} must contain a YAML object`);
+    throw new ProjectToolkitError(`${CONFIG_RELATIVE_PATH} must contain a YAML object`);
   }
 
   return validateConfig(parsed, CONFIG_RELATIVE_PATH);
 }
 
-function validateConfig(raw: Record<string, unknown>, label: string): RepoKitConfig {
+function validateConfig(raw: Record<string, unknown>, label: string): ProjectToolkitConfig {
   const dev = readNestedObject(raw, "dev", label);
   const logs = readNestedObject(raw, "logs", label);
   const project = readNestedObject(raw, "project", label);
@@ -47,7 +47,7 @@ function validateConfig(raw: Record<string, unknown>, label: string): RepoKitCon
   const logsDir = readOptionalString(logs, "dir", `${label}.logs.dir`);
   const projectName = readOptionalString(project, "name", `${label}.project.name`);
 
-  const config: RepoKitConfig = {};
+  const config: ProjectToolkitConfig = {};
 
   if (devCommand) {
     config.dev = { command: devCommand };
@@ -75,7 +75,7 @@ function readNestedObject(
   }
 
   if (!isRecord(value)) {
-    throw new RepoKitError(`${label}.${key} must be an object`);
+    throw new ProjectToolkitError(`${label}.${key} must be an object`);
   }
 
   return value;
@@ -92,7 +92,7 @@ function readOptionalString(
 
   const value = raw[key];
   if (typeof value !== "string") {
-    throw new RepoKitError(`${label} must be a string`);
+    throw new ProjectToolkitError(`${label} must be a string`);
   }
 
   const normalized = value.trim();

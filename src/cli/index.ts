@@ -4,9 +4,9 @@ import path from "node:path";
 import process from "node:process";
 import { CodexSdkAdapter } from "../adapters/codex-sdk/adapter.js";
 import { getAuthStatus } from "../core/auth.js";
-import { loadRepoKitConfig } from "../core/config.js";
+import { loadProjectToolkitConfig } from "../core/config.js";
 import { runDevWrapper } from "../core/dev-wrapper.js";
-import { RepoKitError } from "../core/errors.js";
+import { ProjectToolkitError } from "../core/errors.js";
 import { getPackageRoot } from "../core/package-root.js";
 import { collectRepoContext } from "../core/repo-context.js";
 import { createSessionLog } from "../core/session-log.js";
@@ -47,13 +47,13 @@ async function main(): Promise<void> {
       await handleAuthCommand(args.slice(1));
       return;
     default:
-      throw new RepoKitError(`Unknown command: ${args[0]}`);
+      throw new ProjectToolkitError(`Unknown command: ${args[0]}`);
   }
 }
 
 async function handleSkillsCommand(args: string[], skillsRoot: string): Promise<void> {
   if (args[0] !== "list" || args.length !== 1) {
-    throw new RepoKitError("Usage: repo-kit skills list");
+    throw new ProjectToolkitError("Usage: pkit skills list");
   }
 
   const skills = await discoverSkills(skillsRoot);
@@ -63,16 +63,16 @@ async function handleSkillsCommand(args: string[], skillsRoot: string): Promise<
 async function handleAgentCommand(mode: "plan" | "run", args: string[], skillsRoot: string): Promise<void> {
   const skillId = args[0];
   if (!skillId || args.length !== 1) {
-    throw new RepoKitError(`Usage: repo-kit ${mode} <skill-id>`);
+    throw new ProjectToolkitError(`Usage: pkit ${mode} <skill-id>`);
   }
 
   const cwd = process.cwd();
-  const config = await loadRepoKitConfig(cwd);
+  const config = await loadProjectToolkitConfig(cwd);
   const skill = await loadSkill(skillsRoot, skillId);
   const repoContext = await collectRepoContext(cwd);
 
   if (!repoContext.gitRoot) {
-    throw new RepoKitError("Current working directory must be inside a Git repository");
+    throw new ProjectToolkitError("Current working directory must be inside a Git repository");
   }
 
   const sessionLog = await createSessionLog({
@@ -149,7 +149,7 @@ async function handleAgentCommand(mode: "plan" | "run", args: string[], skillsRo
 
 async function handleDevCommand(args: string[]): Promise<void> {
   const cwd = process.cwd();
-  const config = await loadRepoKitConfig(cwd);
+  const config = await loadProjectToolkitConfig(cwd);
   const repoContext = await collectRepoContext(cwd);
   const sessionLog = await createSessionLog({
     cwd: repoContext.cwd,
@@ -179,7 +179,7 @@ async function handleDevCommand(args: string[]): Promise<void> {
 
 async function handleAuthCommand(args: string[]): Promise<void> {
   if (args[0] !== "status" || args.length !== 1) {
-    throw new RepoKitError("Usage: repo-kit auth status");
+    throw new ProjectToolkitError("Usage: pkit auth status");
   }
 
   const auth = getAuthStatus();
@@ -187,7 +187,7 @@ async function handleAuthCommand(args: string[]): Promise<void> {
   console.log(`Status: ${auth.available ? "available" : "missing"}`);
   console.log(
     auth.available
-      ? "repo-kit can authenticate to Codex with the configured API key."
+      ? "project-toolkit can authenticate to Codex with the configured API key."
       : "Set OPENAI_API_KEY to enable plan/run commands.",
   );
 }
@@ -294,11 +294,13 @@ function printExecutionFooter(result: PlanExecutionResult | TaskExecutionResult,
 }
 
 function printUsage(): void {
-  console.log(`repo-kit skills list
-repo-kit plan <skill-id>
-repo-kit run <skill-id>
-repo-kit dev [--] <command...>
-repo-kit auth status`);
+  console.log(`pkit skills list
+pkit plan <skill-id>
+pkit run <skill-id>
+pkit dev [--] <command...>
+pkit auth status
+
+Also available as: project-toolkit`);
 }
 
 function pad(value: string, width: number): string {
@@ -321,7 +323,7 @@ async function appendSessionContextEvent(options: {
   sessionLog: Awaited<ReturnType<typeof createSessionLog>>;
   sessionKind: "plan" | "run" | "dev";
   repoContext: RepoContext;
-  config: Awaited<ReturnType<typeof loadRepoKitConfig>>;
+  config: Awaited<ReturnType<typeof loadProjectToolkitConfig>>;
   skillId?: string;
   commandArgs?: string[];
 }): Promise<void> {
@@ -366,5 +368,5 @@ try {
 } catch (error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`error: ${message}`);
-  process.exit(error instanceof RepoKitError ? error.exitCode : 1);
+  process.exit(error instanceof ProjectToolkitError ? error.exitCode : 1);
 }
