@@ -33,6 +33,57 @@ export interface AuthStatus {
   source: "OPENAI_API_KEY";
 }
 
+export interface RepoKitConfig {
+  dev?: {
+    command?: string;
+  };
+  logs?: {
+    dir?: string;
+  };
+  project?: {
+    name?: string;
+  };
+}
+
+export type JsonPrimitive = boolean | number | string | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
+
+export interface JsonObject {
+  [key: string]: JsonValue;
+}
+
+export type SessionLogLevel = "debug" | "info" | "warn" | "error";
+
+export interface SessionLogEvent {
+  timestamp: string;
+  sessionId: string;
+  source: string;
+  eventType: string;
+  level: SessionLogLevel;
+  cwd: string;
+  gitRoot: string | null;
+  skillId?: string;
+  command?: string;
+  message?: string;
+  payload?: JsonValue;
+}
+
+export interface SessionLogEventInput {
+  source: string;
+  eventType: string;
+  level: SessionLogLevel;
+  skillId?: string;
+  command?: string;
+  message?: string;
+  payload?: JsonValue;
+}
+
+export interface SessionLog {
+  sessionId: string;
+  filePath: string;
+  append(event: SessionLogEventInput): Promise<void>;
+}
+
 export interface ExecutionUsage {
   inputTokens: number;
   cachedInputTokens: number;

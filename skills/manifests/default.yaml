@@ -4,6 +4,8 @@ files:
       target: .github/workflows/ci.yml
     - source: github-codeowners/CODEOWNERS
       target: .github/CODEOWNERS
+    - source: agent-reviewer/reviewer.md
+      target: .github/agents/reviewer.md
     - source: mobile-expo-codespaces/SKILL.md
       target: skills/mobile-expo-codespaces/SKILL.md
     - source: mobile-expo-codespaces/scripts/doctor.sh
@@ -36,8 +38,10 @@ files:
       target: skills/docker-build/SKILL.md
     - source: release-github/SKILL.md
       target: skills/release-github/SKILL.md
-    - source: agent-reviewer/reviewer.md
-      target: .github/agents/reviewer.md
+    - source: project-env-secrets/SKILL.md
+      target: skills/project-env-secrets/SKILL.md
+    - source: project-env-secrets/references/runtime-patterns.md
+      target: skills/project-env-secrets/references/runtime-patterns.md
     - source: agent-ready-quality-gates/SKILL.md
       target: skills/agent-ready-quality-gates/SKILL.md
     - source: agent-ready-quality-gates/references/js-ts-thresholds.md
@@ -58,3 +62,11 @@ files:
       target: skills/pr-quality-pipeline/references/local-gate-layout.md
     - source: pr-quality-pipeline/templates/pr-quality.yml.j2
       target: skills/pr-quality-pipeline/templates/pr-quality.yml.j2
+    - source: logging-observability/SKILL.md
+      target: skills/logging-observability/SKILL.md
+    - source: logging-observability/references/jsonl-event-schema.md
+      target: skills/logging-observability/references/jsonl-event-schema.md
+    - source: logging-observability/references/node-service-pattern.md
+      target: skills/logging-observability/references/node-service-pattern.md
+    - source: logging-observability/references/observability-roadmap.md
+      target: skills/logging-observability/references/observability-roadmap.md

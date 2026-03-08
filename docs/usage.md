@@ -12,8 +12,26 @@
 repo-kit skills list
 repo-kit plan <skill-id>
 repo-kit run <skill-id>
+repo-kit dev [--] <command...>
 repo-kit auth status
 ```
+
+## Repository config
+
+`repo-kit` optionally reads `.repo-kit/config.yaml` from the current working directory.
+
+```yaml
+dev:
+    command: npm run dev
+logs:
+    dir: logs/repo-kit
+project:
+    name: my-service
+```
+
+- `dev.command`: shell command used by `repo-kit dev` when no explicit command is passed
+- `logs.dir`: directory for JSONL session logs; defaults to `logs/repo-kit` under the current working directory
+- `project.name`: optional project label recorded in session log metadata
 
 ### `repo-kit skills list`
 
@@ -27,6 +45,7 @@ repo-kit auth status
 - Collects a small repository summary from the current working directory
 - Runs Codex in read-only planning mode
 - Prints the intended plan without applying changes
+- Writes a JSONL session log for the invocation
 
 ### `repo-kit run <skill-id>`
 
@@ -34,6 +53,14 @@ repo-kit auth status
 - Collects the same minimal repository context
 - Runs Codex in execution mode with the skill directory exposed as an additional readable path
 - Prints the final response, changed files, and executed commands when available
+- Writes a JSONL session log for the invocation
+
+### `repo-kit dev [--] <command...>`
+
+- Runs an explicit command directly from the CLI arguments
+- If no explicit command is provided, falls back to `.repo-kit/config.yaml` `dev.command`
+- Streams stdout and stderr to the terminal while also recording line-oriented JSONL events
+- Preserves the wrapped command's exit code via the `repo-kit` process exit status
 
 ### `repo-kit auth status`
 
@@ -46,6 +73,7 @@ repo-kit auth status
 npm install
 npm run build
 node dist/cli/index.js skills list
+node dist/cli/index.js dev -- npm run build
 ```
 
 ## GitHub Packages

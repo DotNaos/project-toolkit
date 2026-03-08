@@ -41,15 +41,34 @@ node dist/cli/index.js skills list
 repo-kit skills list
 repo-kit plan <skill-id>
 repo-kit run <skill-id>
+repo-kit dev [--] <command...>
 repo-kit auth status
 ```
 
 Command behavior in v1:
 
 - `skills list` discovers first-level directories under `skills/` and reports whether each one looks runnable.
-- `plan <skill-id>` loads the selected skill, collects a small repository summary from the current working directory, and asks Codex for a read-only plan.
-- `run <skill-id>` loads the selected skill and executes it through Codex with minimal adapter wiring for future approval and diff hooks.
+- `plan <skill-id>` loads the selected skill, collects a small repository summary from the current working directory, asks Codex for a read-only plan, and writes a JSONL session log.
+- `run <skill-id>` loads the selected skill, executes it through Codex with minimal adapter wiring for future approval and diff hooks, and writes a JSONL session log.
+- `dev [--] <command...>` runs an explicit local command, or falls back to `.repo-kit/config.yaml` `dev.command`, while teeing stdout and stderr into a JSONL session log.
 - `auth status` reports whether `OPENAI_API_KEY` is present.
+
+## Repository config
+
+`repo-kit` optionally reads `.repo-kit/config.yaml` from the current working directory:
+
+```yaml
+dev:
+    command: npm run dev
+logs:
+    dir: logs/repo-kit
+project:
+    name: my-service
+```
+
+- `dev.command`: default shell command for `repo-kit dev`
+- `logs.dir`: optional directory override for JSONL session logs
+- `project.name`: optional project label recorded in session metadata
 
 ## Skill Format
 
@@ -106,5 +125,5 @@ npm publish --dry-run
 
 - No agent backend other than Codex SDK
 - No custom OAuth flow or ChatGPT login implementation
-- No persistence layer beyond Codex thread/session handling
+- No persistence layer beyond Codex thread/session handling and local JSONL session logs
 - No approval or diff hooks yet, only the structure to add them later

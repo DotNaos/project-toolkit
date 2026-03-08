@@ -2,12 +2,12 @@ name: webapp
 files:
     - source: github-actions-ci/workflows/ci.yml
       target: .github/workflows/ci.yml
+    - source: agent-reviewer/reviewer.md
+      target: .github/agents/reviewer.md
     - source: devcontainer/devcontainer.json
       target: .devcontainer/devcontainer.json
     - source: webapp-template/webapp.env.example
       target: .env.example
-    - source: agent-reviewer/reviewer.md
-      target: .github/agents/reviewer.md
     - source: agent-ready-quality-gates/SKILL.md
       target: skills/agent-ready-quality-gates/SKILL.md
     - source: agent-ready-quality-gates/references/js-ts-thresholds.md
