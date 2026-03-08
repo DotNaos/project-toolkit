@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
+	"github.com/DotNaos/project-toolkit/internal/auth"
 	"github.com/DotNaos/project-toolkit/internal/nodebridge"
 	"github.com/DotNaos/project-toolkit/internal/projectconfig"
 	"github.com/DotNaos/project-toolkit/internal/projectinit"
+	"github.com/DotNaos/project-toolkit/internal/skillcatalog"
 	"github.com/DotNaos/project-toolkit/internal/workspace"
 	"github.com/DotNaos/project-toolkit/internal/worktree"
 	"github.com/spf13/cobra"
@@ -46,8 +49,19 @@ func newSkillsCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List discovered skills",
 		Args:  cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return nodebridge.Run([]string{"skills", "list"})
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			skillsRoot, err := skillcatalog.ResolveSkillsRoot()
+			if err != nil {
+				return err
+			}
+
+			skills, err := skillcatalog.Discover(skillsRoot)
+			if err != nil {
+				return err
+			}
+
+			printSkillSummaries(cmd.OutOrStdout(), skills)
+			return nil
 		},
 	})
 
@@ -210,8 +224,18 @@ func newAuthCommand() *cobra.Command {
 		Use:   "status",
 		Short: "Show authentication status for the current adapter",
 		Args:  cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return nodebridge.Run([]string{"auth", "status"})
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			status := auth.GetStatus(environmentMap())
+			fmt.Fprintf(cmd.OutOrStdout(), "Auth source: %s\n", status.Source)
+			if status.Available {
+				fmt.Fprintln(cmd.OutOrStdout(), "Status: available")
+				fmt.Fprintln(cmd.OutOrStdout(), "project-toolkit can authenticate to Codex with the configured API key.")
+				return nil
+			}
+
+			fmt.Fprintln(cmd.OutOrStdout(), "Status: missing")
+			fmt.Fprintln(cmd.OutOrStdout(), "Set OPENAI_API_KEY to enable plan/run commands.")
+			return nil
 		},
 	})
 
@@ -366,6 +390,108 @@ func printProjectWorktreeCreateResult(writer io.Writer, result worktree.CreateRe
 
 		fmt.Fprintf(writer, "- [%s] %s -> %s%s\n", sharedLink.Status, sharedLink.Path, sharedLink.TargetPath, reason)
 	}
+}
+
+func printSkillSummaries(writer io.Writer, skills []skillcatalog.Summary) {
+	if len(skills) == 0 {
+		fmt.Fprintln(writer, "No skills found.")
+		return
+	}
+
+	rows := buildSkillSummaryRows(skills)
+	widthID, widthTitle, widthValid := measureSkillSummaryWidths(rows)
+
+	fmt.Fprintf(writer, "%s  %s  %s  NOTES\n", padRight("ID", widthID), padRight("TITLE", widthTitle), padRight("VALID", widthValid))
+	for _, row := range rows {
+		fmt.Fprintf(writer, "%s  %s  %s  %s\n", padRight(row.id, widthID), padRight(row.title, widthTitle), padRight(row.valid, widthValid), row.notes)
+	}
+}
+
+type skillSummaryRow struct {
+	id    string
+	title string
+	valid string
+	notes string
+}
+
+func buildSkillSummaryRows(skills []skillcatalog.Summary) []skillSummaryRow {
+	rows := make([]skillSummaryRow, 0, len(skills))
+	for _, skill := range skills {
+		rows = append(rows, skillSummaryRow{
+			id:    skill.ID,
+			title: displaySkillTitle(skill),
+			valid: displaySkillValidity(skill),
+			notes: displaySkillNotes(skill),
+		})
+	}
+
+	return rows
+}
+
+func measureSkillSummaryWidths(rows []skillSummaryRow) (int, int, int) {
+	widthID := len("ID")
+	widthTitle := len("TITLE")
+	widthValid := len("VALID")
+
+	for _, row := range rows {
+		if len(row.id) > widthID {
+			widthID = len(row.id)
+		}
+		if len(row.title) > widthTitle {
+			widthTitle = len(row.title)
+		}
+		if len(row.valid) > widthValid {
+			widthValid = len(row.valid)
+		}
+	}
+
+	return widthID, widthTitle, widthValid
+}
+
+func displaySkillTitle(skill skillcatalog.Summary) string {
+	if skill.Title == "" {
+		return "-"
+	}
+
+	return skill.Title
+}
+
+func displaySkillValidity(skill skillcatalog.Summary) string {
+	if skill.Valid {
+		return "yes"
+	}
+
+	return "no"
+}
+
+func displaySkillNotes(skill skillcatalog.Summary) string {
+	if len(skill.Errors) == 0 {
+		return "-"
+	}
+
+	return strings.Join(skill.Errors, "; ")
+}
+
+func padRight(value string, width int) string {
+	if len(value) >= width {
+		return value
+	}
+
+	return value + strings.Repeat(" ", width-len(value))
+}
+
+func environmentMap() map[string]string {
+	result := map[string]string{}
+	for _, entry := range os.Environ() {
+		parts := strings.SplitN(entry, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		result[parts[0]] = parts[1]
+	}
+
+	return result
 }
 
 func resolveWorkingDirectory() (string, error) {
