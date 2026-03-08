@@ -105,7 +105,7 @@ shared:
 function buildBaseWorkspaceTemplate(): string {
   return `${JSON.stringify(
     {
-      folders: [{ path: ".." }],
+      folders: [],
       settings: {},
     },
     null,

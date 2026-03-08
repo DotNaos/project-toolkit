@@ -11,6 +11,8 @@
 ```bash
 pkit skills list
 pkit project init [--force]
+pkit project workspace generate [--name <workspace>] [--root <dir>] [--output <file>]
+pkit project worktree create <name> [--branch <branch>] [--base <ref>] [--workspace <workspace>] [--output <file>]
 pkit plan <skill-id>
 pkit run <skill-id>
 pkit dev [--] <command...>
@@ -46,6 +48,22 @@ shared:
 - Creates `.project-toolkit/base.code-workspace` when missing
 - With `--force`, rewrites both scaffold files
 - Seeds the future worktree/shared-link foundation without requiring manual file creation
+
+### `pkit project workspace generate [--name <workspace>] [--root <dir>] [--output <file>]`
+
+- Loads `.project-toolkit/base.code-workspace` or the configured `workspace.baseFile`
+- Replaces the entire `folders` section with exactly one entry pointing at the chosen root
+- Writes the generated workspace file outside the repo by default under `~/.project-toolkit/projects/<project-key>/workspaces/`
+- Applies matching `shared` entries as symlinks from the main repo into the chosen root
+- Uses the workspace name for `shared.include` / `shared.exclude` filtering
+
+### `pkit project worktree create <name> [--branch <branch>] [--base <ref>] [--workspace <workspace>] [--output <file>]`
+
+- Creates a managed worktree under `~/.project-toolkit/projects/<project-key>/worktrees/<name>`
+- Creates a new branch with the same name by default, or reuses an existing local branch when present
+- Uses `--base <ref>` for new branches, defaulting to the repository's current `HEAD`
+- Generates a matching workspace file and applies shared-file links into the new worktree
+- Keeps the main repository as the shared-file source in v1
 
 ### `pkit skills list`
 

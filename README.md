@@ -40,6 +40,8 @@ node dist/cli/index.js skills list
 ```bash
 pkit skills list
 pkit project init [--force]
+pkit project workspace generate [--name <workspace>] [--root <dir>] [--output <file>]
+pkit project worktree create <name> [--branch <branch>] [--base <ref>] [--workspace <workspace>] [--output <file>]
 pkit plan <skill-id>
 pkit run <skill-id>
 pkit dev [--] <command...>
@@ -50,6 +52,8 @@ Command behavior in v1:
 
 - `skills list` discovers first-level directories under `skills/` and reports whether each one looks runnable.
 - `project init [--force]` scaffolds `.project-toolkit/config.yaml` plus `.project-toolkit/base.code-workspace` as the starting point for generated workspaces and shared-link config.
+- `project workspace generate ...` loads the base workspace file, replaces its `folders` section for the chosen root, writes the generated `.code-workspace` file outside the repo by default, and applies matching shared-file symlinks.
+- `project worktree create ...` creates a managed Git worktree under the toolkit state directory, creates or reuses a branch, and generates a matching workspace file for that worktree.
 - `plan <skill-id>` loads the selected skill, collects a small repository summary from the current working directory, asks Codex for a read-only plan, and writes a JSONL session log.
 - `run <skill-id>` loads the selected skill, executes it through Codex with minimal adapter wiring for future approval and diff hooks, and writes a JSONL session log.
 - `dev [--] <command...>` runs an explicit local command, or falls back to `.project-toolkit/config.yaml` `dev.command`, while teeing stdout and stderr into a JSONL session log.
@@ -77,6 +81,28 @@ shared:
 - `project.name`: optional project label recorded in session metadata
 - `workspace.baseFile`: stable workspace template inside the repo; future workspace generation replaces the active `folders` section from this base file
 - `shared`: flat list of shared gitignored paths for future worktree linking; `source`/`target` default to `path`, while `include`/`exclude` scope entries by worktree name
+
+Generated workspaces default to:
+
+- `~/.project-toolkit/projects/<project-key>/workspaces/<workspace>.code-workspace`
+
+The command accepts:
+
+- `--name <workspace>`: logical workspace name, also used for shared-link include/exclude matching
+- `--root <dir>`: target repository/worktree root that becomes the only generated `folders` entry
+- `--output <file>`: override the generated workspace file path
+
+Managed worktrees default to:
+
+- `~/.project-toolkit/projects/<project-key>/worktrees/<name>`
+
+`project worktree create` accepts:
+
+- `<name>`: logical worktree identifier and default branch/workspace name
+- `--branch <branch>`: override the Git branch name
+- `--base <ref>`: base ref for new branches; ignored when the branch already exists
+- `--workspace <workspace>`: override the generated workspace name
+- `--output <file>`: override the generated workspace file path
 
 ## Skill Format
 

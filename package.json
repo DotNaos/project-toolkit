@@ -36,6 +36,7 @@
     },
     "dependencies": {
         "@openai/codex-sdk": "^0.111.0",
+        "jsonc-parser": "^3.3.1",
         "yaml": "^2.8.1"
     },
     "devDependencies": {

@@ -12,6 +12,8 @@ import { initializeProjectToolkit } from "../core/project-init.js";
 import { collectRepoContext } from "../core/repo-context.js";
 import { createSessionLog } from "../core/session-log.js";
 import { discoverSkills, loadSkill } from "../core/skills.js";
+import { createProjectWorktree } from "../core/worktree.js";
+import { generateProjectWorkspace } from "../core/workspace.js";
 import type {
     LoadedSkill,
     PlanExecutionResult,
@@ -56,19 +58,183 @@ async function main(): Promise<void> {
 }
 
 async function handleProjectCommand(args: string[]): Promise<void> {
-  if (args[0] !== "init") {
-    throw new ProjectToolkitError("Usage: pkit project init [--force]");
+  if (args[0] === "init") {
+    await handleProjectInitSubcommand(args.slice(1));
+    return;
   }
 
-  const extraArgs = args.slice(1);
-  const force = extraArgs.includes("--force");
-  const unsupportedArgs = extraArgs.filter((value) => value !== "--force");
+  if (args[0] === "workspace" && args[1] === "generate") {
+    await handleProjectWorkspaceGenerateSubcommand(args.slice(2));
+    return;
+  }
+
+  if (args[0] === "worktree" && args[1] === "create") {
+    await handleProjectWorktreeCreateSubcommand(args.slice(2));
+    return;
+  }
+
+  throw new ProjectToolkitError(
+    "Usage: pkit project init [--force]\n       pkit project workspace generate [--name <workspace>] [--root <dir>] [--output <file>]\n       pkit project worktree create <name> [--branch <branch>] [--base <ref>] [--workspace <workspace>] [--output <file>]",
+  );
+}
+
+async function handleProjectInitSubcommand(args: string[]): Promise<void> {
+  const force = parseProjectInitArgs(args);
+  const result = await initializeProjectToolkit(process.cwd(), force);
+  printProjectInitResult(result, force);
+}
+
+async function handleProjectWorkspaceGenerateSubcommand(args: string[]): Promise<void> {
+  const options = parseProjectWorkspaceGenerateArgs(args);
+  const cwd = process.cwd();
+  const config = await loadProjectToolkitConfig(cwd);
+  const workspaceOptions: Parameters<typeof generateProjectWorkspace>[0] = {
+    cwd,
+    config,
+    workspaceName: options.name,
+  };
+
+  if (options.output) {
+    workspaceOptions.outputPath = options.output;
+  }
+
+  if (options.root) {
+    workspaceOptions.targetRoot = options.root;
+  }
+
+  const result = await generateProjectWorkspace(workspaceOptions);
+  printProjectWorkspaceGenerateResult(result);
+}
+
+async function handleProjectWorktreeCreateSubcommand(args: string[]): Promise<void> {
+  const worktreeName = args[0];
+  if (!worktreeName) {
+    throw new ProjectToolkitError(
+      "Usage: pkit project worktree create <name> [--branch <branch>] [--base <ref>] [--workspace <workspace>] [--output <file>]",
+    );
+  }
+
+  const options = parseProjectWorktreeCreateArgs(args.slice(1));
+  const cwd = process.cwd();
+  const config = await loadProjectToolkitConfig(cwd);
+  const worktreeOptions: Parameters<typeof createProjectWorktree>[0] = {
+    cwd,
+    config,
+    worktreeName,
+  };
+
+  if (options.branch) {
+    worktreeOptions.branchName = options.branch;
+  }
+
+  if (options.base) {
+    worktreeOptions.baseRef = options.base;
+  }
+
+  if (options.workspace) {
+    worktreeOptions.workspaceName = options.workspace;
+  }
+
+  if (options.output) {
+    worktreeOptions.workspaceOutputPath = options.output;
+  }
+
+  const result = await createProjectWorktree(worktreeOptions);
+  printProjectWorktreeCreateResult(result);
+}
+
+function parseProjectInitArgs(args: string[]): boolean {
+  const force = args.includes("--force");
+  const unsupportedArgs = args.filter((value) => value !== "--force");
   if (unsupportedArgs.length > 0) {
     throw new ProjectToolkitError("Usage: pkit project init [--force]");
   }
 
-  const result = await initializeProjectToolkit(process.cwd(), force);
-  printProjectInitResult(result, force);
+  return force;
+}
+
+function parseProjectWorkspaceGenerateArgs(args: string[]): { name: string; output?: string; root?: string } {
+  let name = "default";
+  let output: string | undefined;
+  let root: string | undefined;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    switch (arg) {
+      case "--name":
+        name = readOptionValue(args, ++index, "--name");
+        break;
+      case "--output":
+        output = readOptionValue(args, ++index, "--output");
+        break;
+      case "--root":
+        root = readOptionValue(args, ++index, "--root");
+        break;
+      default:
+        throw new ProjectToolkitError(
+          "Usage: pkit project workspace generate [--name <workspace>] [--root <dir>] [--output <file>]",
+        );
+    }
+  }
+
+  const result: { name: string; output?: string; root?: string } = { name };
+
+  if (output) {
+    result.output = output;
+  }
+
+  if (root) {
+    result.root = root;
+  }
+
+  return result;
+}
+
+function readOptionValue(args: string[], index: number, optionName: string): string {
+  const value = args[index];
+  if (!value || value.startsWith("--")) {
+    throw new ProjectToolkitError(`${optionName} requires a value`);
+  }
+
+  return value;
+}
+
+function parseProjectWorktreeCreateArgs(args: string[]): {
+  branch?: string;
+  base?: string;
+  workspace?: string;
+  output?: string;
+} {
+  const result: {
+    branch?: string;
+    base?: string;
+    workspace?: string;
+    output?: string;
+  } = {};
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    switch (arg) {
+      case "--branch":
+        result.branch = readOptionValue(args, ++index, "--branch");
+        break;
+      case "--base":
+        result.base = readOptionValue(args, ++index, "--base");
+        break;
+      case "--workspace":
+        result.workspace = readOptionValue(args, ++index, "--workspace");
+        break;
+      case "--output":
+        result.output = readOptionValue(args, ++index, "--output");
+        break;
+      default:
+        throw new ProjectToolkitError(
+          "Usage: pkit project worktree create <name> [--branch <branch>] [--base <ref>] [--workspace <workspace>] [--output <file>]",
+        );
+    }
+  }
+
+  return result;
 }
 
 async function handleSkillsCommand(args: string[], skillsRoot: string): Promise<void> {
@@ -316,6 +482,8 @@ function printExecutionFooter(result: PlanExecutionResult | TaskExecutionResult,
 function printUsage(): void {
   console.log(`pkit skills list
 pkit project init [--force]
+pkit project workspace generate [--name <workspace>] [--root <dir>] [--output <file>]
+pkit project worktree create <name> [--branch <branch>] [--base <ref>] [--workspace <workspace>] [--output <file>]
 pkit plan <skill-id>
 pkit run <skill-id>
 pkit dev [--] <command...>
@@ -333,6 +501,42 @@ function printProjectInitResult(
   printFileGroup("Created", result.created);
   printFileGroup("Updated", result.updated);
   printFileGroup("Skipped", result.skipped);
+}
+
+function printProjectWorkspaceGenerateResult(
+  result: Awaited<ReturnType<typeof generateProjectWorkspace>>,
+): void {
+  console.log(`Generated workspace: ${result.outputPath}`);
+  console.log(`Project key: ${result.projectKey}`);
+  console.log(`Workspace name: ${result.workspaceName}`);
+  console.log(`Workspace root: ${result.targetRoot}`);
+  console.log(`Base workspace: ${result.baseWorkspacePath}`);
+  console.log(`Folder entry: ${result.folderPath}`);
+
+  if (result.sharedLinks.length > 0) {
+    console.log("Shared links:");
+    for (const sharedLink of result.sharedLinks) {
+      const reason = sharedLink.reason ? ` (${sharedLink.reason})` : "";
+      console.log(`- [${sharedLink.status}] ${sharedLink.path} -> ${sharedLink.targetPath}${reason}`);
+    }
+  }
+}
+
+function printProjectWorktreeCreateResult(
+  result: Awaited<ReturnType<typeof createProjectWorktree>>,
+): void {
+  console.log(`Created worktree: ${result.worktreePath}`);
+  console.log(`Branch: ${result.branchName}`);
+  console.log(`Git root: ${result.gitRoot}`);
+  console.log(`Workspace file: ${result.workspace.outputPath}`);
+
+  if (result.workspace.sharedLinks.length > 0) {
+    console.log("Shared links:");
+    for (const sharedLink of result.workspace.sharedLinks) {
+      const reason = sharedLink.reason ? ` (${sharedLink.reason})` : "";
+      console.log(`- [${sharedLink.status}] ${sharedLink.path} -> ${sharedLink.targetPath}${reason}`);
+    }
+  }
 }
 
 function printFileGroup(label: string, files: string[]): void {
