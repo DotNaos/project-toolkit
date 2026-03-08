@@ -1,6 +1,6 @@
+import { ParseErrorCode, parse as parseJsonc, printParseErrorCode } from "jsonc-parser";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { parse as parseJsonc, ParseErrorCode, printParseErrorCode } from "jsonc-parser";
 import { BASE_WORKSPACE_RELATIVE_PATH } from "./config.js";
 import { ProjectToolkitError } from "./errors.js";
 import { deriveProjectKey, getGeneratedWorkspacePath } from "./project-paths.js";

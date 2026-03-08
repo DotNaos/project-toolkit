@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import { promisify } from "node:util";
 import { ProjectToolkitError } from "./errors.js";
 import { deriveProjectKey, getManagedWorktreePath } from "./project-paths.js";
-import { generateProjectWorkspace, type WorkspaceGenerateResult } from "./workspace.js";
 import type { ProjectToolkitConfig } from "./types.js";
+import { generateProjectWorkspace, type WorkspaceGenerateResult } from "./workspace.js";
 
 const execFileAsync = promisify(execFile);
 

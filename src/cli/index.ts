@@ -12,8 +12,6 @@ import { initializeProjectToolkit } from "../core/project-init.js";
 import { collectRepoContext } from "../core/repo-context.js";
 import { createSessionLog } from "../core/session-log.js";
 import { discoverSkills, loadSkill } from "../core/skills.js";
-import { createProjectWorktree } from "../core/worktree.js";
-import { generateProjectWorkspace } from "../core/workspace.js";
 import type {
     LoadedSkill,
     PlanExecutionResult,
@@ -21,6 +19,8 @@ import type {
     SkillSummary,
     TaskExecutionResult,
 } from "../core/types.js";
+import { generateProjectWorkspace } from "../core/workspace.js";
+import { createProjectWorktree } from "../core/worktree.js";
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
