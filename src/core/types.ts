@@ -37,6 +37,11 @@ export interface ProjectToolkitWorkspaceConfig {
   baseFile?: string;
 }
 
+export interface ProjectToolkitDevRouterConfig {
+  mode: "portless" | "dockportless";
+  name?: string;
+}
+
 export interface ProjectToolkitSharedLink {
   path: string;
   source?: string;
@@ -47,7 +52,9 @@ export interface ProjectToolkitSharedLink {
 
 export interface ProjectToolkitConfig {
   dev?: {
+    args?: string[];
     command?: string;
+    router?: ProjectToolkitDevRouterConfig;
   };
   logs?: {
     dir?: string;

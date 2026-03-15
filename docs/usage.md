@@ -26,7 +26,10 @@ pkit auth status
 
 ```yaml
 dev:
-    command: npm run dev
+    args: [npm, run, dev]
+    router:
+        mode: portless
+        name: my-service
 logs:
     dir: logs/project-toolkit
 project:
@@ -37,11 +40,21 @@ shared:
     - path: .env
 ```
 
+- `dev.args`: argv-style command used by `pkit dev` when no explicit command is passed; preferred for router-managed workflows
 - `dev.command`: shell command used by `pkit dev` when no explicit command is passed
+- `dev.router.mode`: `portless` for local processes, `dockportless` for compose-compatible Docker workflows
+- `dev.router.name`: optional stable base name for local URLs and Docker Compose project naming
 - `logs.dir`: directory for JSONL session logs; defaults to `logs/project-toolkit` under the current working directory
 - `project.name`: optional project label recorded in session log metadata
 - `workspace.baseFile`: stable in-repo workspace template used as the source for future generated workspaces
 - `shared`: flat list of shared gitignored paths; `source` and `target` default to `path`, while `include` / `exclude` filter by worktree name
+
+### Local routing
+
+- Install `portless` separately before using `portless` mode; upstream requires Node.js 20+.
+- `portless` mode wraps the target command with `portless run --name <name> ...`, which keeps the main checkout on `http://<name>.localhost:1355` and linked worktrees on `http://<branch>.<name>.localhost:1355`.
+- `dockportless` mode wraps the target command with `dockportless run <project> ...`, exports a deterministic `COMPOSE_PROJECT_NAME`, and routes services to `http://<service>.<project>.localhost:7355`.
+- Do not hardcode `-p` / `--project-name` in compose commands when `dockportless` mode is enabled; the toolkit now owns that namespace.
 
 ### `pkit project init [--force]`
 
@@ -97,7 +110,8 @@ shared:
 ### `pkit dev [--] <command...>`
 
 - Runs an explicit command directly from the CLI arguments
-- If no explicit command is provided, falls back to `.project-toolkit/config.yaml` `dev.command`
+- If no explicit command is provided, falls back to `.project-toolkit/config.yaml` `dev.args` and then `dev.command`
+- When `dev.router.mode` is set, wraps the launched command with Portless or Dockportless instead of relying on fixed ports
 - Streams stdout and stderr to the terminal while also recording line-oriented JSONL events
 - Preserves the wrapped command's exit code via the `pkit` process exit status
 

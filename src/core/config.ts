@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
 import { ProjectToolkitError } from "./errors.js";
-import type { ProjectToolkitConfig, ProjectToolkitSharedLink } from "./types.js";
+import type { ProjectToolkitConfig, ProjectToolkitDevRouterConfig, ProjectToolkitSharedLink } from "./types.js";
 
 export const PROJECT_TOOLKIT_DIRNAME = ".project-toolkit";
 export const CONFIG_RELATIVE_PATH = path.join(PROJECT_TOOLKIT_DIRNAME, "config.yaml");
@@ -47,7 +47,9 @@ function validateConfig(raw: Record<string, unknown>, label: string): ProjectToo
   const project = readNestedObject(raw, "project", label);
   const workspace = readNestedObject(raw, "workspace", label);
 
+  const devArgs = readOptionalStringArray(dev ?? {}, "args", `${label}.dev.args`);
   const devCommand = readOptionalString(dev, "command", `${label}.dev.command`);
+  const devRouter = readDevRouter(dev, `${label}.dev`);
   const logsDir = readOptionalString(logs, "dir", `${label}.logs.dir`);
   const projectName = readOptionalString(project, "name", `${label}.project.name`);
   const workspaceBaseFile = readOptionalString(workspace, "baseFile", `${label}.workspace.baseFile`);
@@ -55,8 +57,23 @@ function validateConfig(raw: Record<string, unknown>, label: string): ProjectToo
 
   const config: ProjectToolkitConfig = {};
 
-  if (devCommand) {
-    config.dev = { command: devCommand };
+  if (devArgs || devCommand || devRouter) {
+    if (devRouter && !devArgs && !devCommand) {
+      throw new ProjectToolkitError(`${label}.dev.router requires ${label}.dev.command or ${label}.dev.args`);
+    }
+
+    config.dev = {};
+    if (devArgs) {
+      config.dev.args = devArgs;
+    }
+
+    if (devCommand) {
+      config.dev.command = devCommand;
+    }
+
+    if (devRouter) {
+      config.dev.router = devRouter;
+    }
   }
 
   if (logsDir) {
@@ -76,6 +93,29 @@ function validateConfig(raw: Record<string, unknown>, label: string): ProjectToo
   }
 
   return config;
+}
+
+function readDevRouter(
+  raw: Record<string, unknown> | undefined,
+  label: string,
+): ProjectToolkitDevRouterConfig | undefined {
+  const value = readNestedObject(raw ?? {}, "router", label);
+  if (!value) {
+    return undefined;
+  }
+
+  const mode = readRequiredString(value, "mode", `${label}.router.mode`);
+  if (mode !== "portless" && mode !== "dockportless") {
+    throw new ProjectToolkitError(`${label}.router.mode must be 'portless' or 'dockportless'`);
+  }
+
+  const name = readOptionalString(value, "name", `${label}.router.name`);
+  const router: ProjectToolkitDevRouterConfig = { mode };
+  if (name) {
+    router.name = name;
+  }
+
+  return router;
 }
 
 function readSharedLinks(raw: Record<string, unknown>, label: string): ProjectToolkitSharedLink[] {

@@ -69,7 +69,7 @@ Command behavior in v1:
 - `completion zsh` prints a Zsh completion script for `pkit` and `project-toolkit`.
 - `plan <skill-id>` loads the selected skill, collects a small repository summary from the current working directory, asks Codex for a read-only plan, and writes a JSONL session log.
 - `run <skill-id>` loads the selected skill, executes it through Codex with minimal adapter wiring for future approval and diff hooks, and writes a JSONL session log.
-- `dev [--] <command...>` runs an explicit local command, or falls back to `.project-toolkit/config.yaml` `dev.command`, while teeing stdout and stderr into a JSONL session log.
+- `dev [--] <command...>` runs an explicit local command, or falls back to `.project-toolkit/config.yaml` `dev.args` / `dev.command`, and can optionally wrap that process with Portless or Dockportless while teeing stdout and stderr into a JSONL session log.
 - `auth status` reports whether `OPENAI_API_KEY` is present.
 
 ## Repository config
@@ -78,7 +78,10 @@ Command behavior in v1:
 
 ```yaml
 dev:
-    command: npm run dev
+    args: [npm, run, dev]
+    router:
+        mode: portless
+        name: my-service
 logs:
     dir: logs/project-toolkit
 project:
@@ -89,11 +92,39 @@ shared:
     - path: .env
 ```
 
-- `dev.command`: default shell command for `pkit dev`
+- `dev.args`: argv-style default command for `pkit dev`; preferred when using Portless or Dockportless wrappers
+- `dev.command`: default shell command for `pkit dev`; still supported for simple cases
+- `dev.router.mode`: `portless` for local processes, `dockportless` for compose-compatible Docker workflows
+- `dev.router.name`: optional stable base name for generated local URLs and Docker Compose project names; defaults to `project.name` or the repository name
 - `logs.dir`: optional directory override for JSONL session logs
 - `project.name`: optional project label recorded in session metadata
 - `workspace.baseFile`: stable workspace template inside the repo; future workspace generation replaces the active `folders` section from this base file
 - `shared`: flat list of shared gitignored paths for future worktree linking; `source`/`target` default to `path`, while `include`/`exclude` scope entries by worktree name
+
+## Local Routing
+
+`project-toolkit` now treats ports as an implementation detail instead of a worktree-level contract.
+
+- Non-Docker local services use `portless run --name <name> ...`, so the main checkout gets `http://<name>.localhost:1355` and linked worktrees get `http://<branch>.<name>.localhost:1355`.
+- Docker / Compose flows use `dockportless run <project> ...`, so services resolve at `http://<service>.<project>.localhost:7355`.
+- In `dockportless` mode, `pkit dev` always exports a deterministic `COMPOSE_PROJECT_NAME` derived from the project name plus the current worktree identity, which keeps containers, networks, and volumes isolated across parallel worktrees.
+- The old `PORT=3000` / `PORT=8080` scaffold defaults have been removed from the bundled templates; Portless now injects `PORT`, `HOST`, and `PORTLESS_URL` at runtime.
+
+Install the routers separately:
+
+- `npm install -g portless` (`portless` itself requires Node.js 20+)
+- `brew install mazrean/tap/dockportless`
+
+Migration note:
+
+- Before: each worktree exposed a known port and local docs/templates assumed `localhost:<port>`.
+- After: each worktree keeps a stable named URL and the proxy owns ephemeral port assignment.
+
+Removed assumptions:
+
+- Template `.env.example` files no longer claim a fixed app port.
+- The toolkit no longer expects developers to reserve or document one port per worktree.
+- Docker / Compose project naming is no longer left to ad hoc `-p` flags when `dockportless` mode is enabled.
 
 Generated workspaces default to:
 

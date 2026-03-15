@@ -76,7 +76,17 @@ func buildConfigTemplate(projectName string) string {
   name: %s
 
 dev:
+  # args: [npm, run, dev]
   # command: npm run dev
+  # router:
+  #   mode: portless
+  #   name: %s
+  #
+  # Docker / Compose:
+  # args: [docker, compose, -f, compose.yml, up]
+  # router:
+  #   mode: dockportless
+  #   name: %s
 
 logs:
   dir: %s
@@ -89,7 +99,7 @@ shared:
   # source/target default to path when omitted.
   # include/exclude match worktree names.
   - path: .env
-`, projectName, projectconfig.DefaultLogsRelativeDir, projectconfig.BaseWorkspaceRelativePath)
+`, projectName, projectName, projectName, projectconfig.DefaultLogsRelativeDir, projectconfig.BaseWorkspaceRelativePath)
 }
 
 func buildBaseWorkspaceTemplate() string {

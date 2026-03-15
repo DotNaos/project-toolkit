@@ -86,7 +86,17 @@ function buildConfigTemplate(projectName: string): string {
   name: ${projectName}
 
 dev:
+  # args: [npm, run, dev]
   # command: npm run dev
+  # router:
+  #   mode: portless
+  #   name: ${projectName}
+  #
+  # Docker / Compose:
+  # args: [docker, compose, -f, compose.yml, up]
+  # router:
+  #   mode: dockportless
+  #   name: ${projectName}
 
 logs:
   dir: ${DEFAULT_LOGS_RELATIVE_DIR}

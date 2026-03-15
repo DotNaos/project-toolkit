@@ -31,7 +31,7 @@
 11. The Codex adapter starts a thread with the current repository as the working directory and the selected skill directory exposed via `additionalDirectories`.
 12. `plan` uses read-only sandboxing and a structured JSON plan schema.
 13. `run` uses workspace-write sandboxing and returns the agent response plus basic execution summaries.
-14. `dev` wraps either an explicit subprocess or a configured shell command, tees terminal output, and appends structured output events to the same JSONL session log.
+14. `dev` wraps either an explicit subprocess or a configured `dev.args` / `dev.command`, can route it through Portless or Dockportless, tees terminal output, and appends structured output events to the same JSONL session log.
 
 ## Skill Compatibility
 
@@ -60,6 +60,8 @@ Directories without a prompt definition are intentionally left invalid instead o
 - `project init` writes both the config scaffold and `.project-toolkit/base.code-workspace` so future generated workspaces can replace only the active `folders` section while keeping a stable base file in the repo.
 - `project workspace generate` defaults its output to `~/.project-toolkit/projects/<project-key>/workspaces/<name>.code-workspace`, which keeps generated state outside the repository while preserving an editable base file in-repo.
 - `project worktree create` defaults worktrees to `~/.project-toolkit/projects/<project-key>/worktrees/<name>`, so parallel agent branches live outside the main repository while still sharing selected ignored files from the source repo.
+- `dev.router.mode: portless` uses Portless-managed named routing for local processes, so worktrees keep stable `.localhost` URLs without reserving fixed ports.
+- `dev.router.mode: dockportless` uses Dockportless for compose-compatible Docker workflows and exports a worktree-specific `COMPOSE_PROJECT_NAME` so containers, networks, and volumes stay isolated.
 - Session logs are JSONL files written to `logs/project-toolkit/` by default, or to `logs.dir` when configured.
 - Each session log entry includes a timestamp, random session id, cwd, git root, event source, event type, severity, and optional command or skill metadata.
 - The CLI keeps human-readable terminal output separate from structured logs so local workflows stay friendly while automation stays inspectable.

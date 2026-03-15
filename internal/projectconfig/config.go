@@ -26,7 +26,14 @@ type Config struct {
 }
 
 type DevConfig struct {
-	Command string `yaml:"command"`
+	Command string           `yaml:"command"`
+	Args    []string         `yaml:"args"`
+	Router  *DevRouterConfig `yaml:"router"`
+}
+
+type DevRouterConfig struct {
+	Mode string `yaml:"mode"`
+	Name string `yaml:"name"`
 }
 
 type LogsConfig struct {
@@ -74,22 +81,52 @@ func Load(cwd string) (Config, error) {
 }
 
 func normalize(config *Config) error {
-	normalizeDev(config)
+	if err := normalizeDev(config); err != nil {
+		return err
+	}
 	normalizeLogs(config)
 	normalizeProject(config)
 	normalizeWorkspace(config)
 	return normalizeShared(config)
 }
 
-func normalizeDev(config *Config) {
+func normalizeDev(config *Config) error {
 	if config.Dev == nil {
-		return
+		return nil
 	}
 
 	config.Dev.Command = strings.TrimSpace(config.Dev.Command)
-	if config.Dev.Command == "" {
+	args, err := normalizeStringList(config.Dev.Args, ConfigRelativePath+".dev.args")
+	if err != nil {
+		return err
+	}
+	config.Dev.Args = args
+
+	if config.Dev.Router != nil {
+		config.Dev.Router.Mode = strings.TrimSpace(config.Dev.Router.Mode)
+		config.Dev.Router.Name = strings.TrimSpace(config.Dev.Router.Name)
+		if config.Dev.Router.Mode == "" && config.Dev.Router.Name == "" {
+			config.Dev.Router = nil
+		}
+	}
+
+	if config.Dev.Router != nil {
+		switch config.Dev.Router.Mode {
+		case "portless", "dockportless":
+		default:
+			return fmt.Errorf("%s.dev.router.mode must be 'portless' or 'dockportless'", ConfigRelativePath)
+		}
+	}
+
+	if config.Dev.Command == "" && len(config.Dev.Args) == 0 {
+		if config.Dev.Router != nil {
+			return fmt.Errorf("%s.dev.router requires %s.dev.command or %s.dev.args", ConfigRelativePath, ConfigRelativePath, ConfigRelativePath)
+		}
+
 		config.Dev = nil
 	}
+
+	return nil
 }
 
 func normalizeLogs(config *Config) {
