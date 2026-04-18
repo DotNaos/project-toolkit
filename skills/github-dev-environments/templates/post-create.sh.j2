@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$REPO_ROOT"
+
+{% if use_devbox | default(false) %}
+if ! command -v devbox >/dev/null 2>&1; then
+  {{ devbox_install_command | default("curl -fsSL https://get.jetify.com/devbox | bash") }}
+fi
+
+{{ devbox_bootstrap_command | default("devbox run bootstrap") }}
+{% else %}
+{{ bootstrap_command | default("true") }}
+{% endif %}
+{% for command in post_create_steps | default([]) %}
+{{ command }}
+{% endfor %}

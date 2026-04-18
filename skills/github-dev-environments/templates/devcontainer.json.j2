@@ -1,0 +1,25 @@
+{
+  "name": {{ name | default("repo-dev") | tojson }},
+  "image": {{ image | default("mcr.microsoft.com/devcontainers/base:ubuntu") | tojson }},
+  "workspaceFolder": {{ workspace_folder | default("/workspaces/${localWorkspaceFolderBasename}") | tojson }},
+  "remoteUser": {{ remote_user | default("vscode") | tojson }},
+  "features": {{ features | default({}) | tojson }},
+  "forwardPorts": {{ forward_ports | default([]) | tojson }},
+  "portsAttributes": {{ ports_attributes | default({}) | tojson }},
+  "containerEnv": {{ container_env | default({}) | tojson }},
+  "customizations": {
+    "vscode": {
+      "extensions": {{ vscode_extensions | default([]) | tojson }},
+      "settings": {{ vscode_settings | default({}) | tojson }}
+    }
+  },
+  "hostRequirements": {
+    "cpus": {{ host_requirements.cpus | default(4) }},
+    "memory": {{ host_requirements.memory | default("8gb") | tojson }},
+    "storage": {{ host_requirements.storage | default("32gb") | tojson }}
+  },
+  "onCreateCommand": {{ on_create_command | default("true") | tojson }},
+  "updateContentCommand": {{ update_content_command | default("true") | tojson }},
+  "postCreateCommand": {{ post_create_command | default("bash .devcontainer/post-create.sh") | tojson }},
+  "postStartCommand": {{ post_start_command | default("true") | tojson }}
+}

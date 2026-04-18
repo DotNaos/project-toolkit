@@ -6,6 +6,18 @@ files:
       target: .github/agents/reviewer.md
     - source: devcontainer/devcontainer.json
       target: .devcontainer/devcontainer.json
+    - source: github-dev-environments/SKILL.md
+      target: skills/github-dev-environments/SKILL.md
+    - source: github-dev-environments/references/config-guide.md
+      target: skills/github-dev-environments/references/config-guide.md
+    - source: github-dev-environments/references/migration-checklist.md
+      target: skills/github-dev-environments/references/migration-checklist.md
+    - source: github-dev-environments/templates/devcontainer.json.j2
+      target: skills/github-dev-environments/templates/devcontainer.json.j2
+    - source: github-dev-environments/templates/devbox.json.j2
+      target: skills/github-dev-environments/templates/devbox.json.j2
+    - source: github-dev-environments/templates/post-create.sh.j2
+      target: skills/github-dev-environments/templates/post-create.sh.j2
     - source: webapp-template/webapp.env.example
       target: .env.example
     - source: agent-ready-quality-gates/SKILL.md

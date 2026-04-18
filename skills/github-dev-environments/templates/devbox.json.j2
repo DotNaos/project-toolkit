@@ -1,0 +1,9 @@
+{
+  "packages": {{ packages | default([]) | tojson }},
+  "env": {{ env | default({}) | tojson }},
+  "include": {{ include | default([]) | tojson }},
+  "shell": {
+    "init_hook": {{ init_hook | default([]) | tojson }},
+    "scripts": {{ scripts | default({}) | tojson }}
+  }
+}

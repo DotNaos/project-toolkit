@@ -16,6 +16,18 @@ files:
       target: skills/mobile-expo-codespaces/references/pipelines/eas-build.yml.j2
     - source: mobile-expo-codespaces/references/pipelines/eas-build-submit-update.yml.j2
       target: skills/mobile-expo-codespaces/references/pipelines/eas-build-submit-update.yml.j2
+    - source: github-dev-environments/SKILL.md
+      target: skills/github-dev-environments/SKILL.md
+    - source: github-dev-environments/references/config-guide.md
+      target: skills/github-dev-environments/references/config-guide.md
+    - source: github-dev-environments/references/migration-checklist.md
+      target: skills/github-dev-environments/references/migration-checklist.md
+    - source: github-dev-environments/templates/devcontainer.json.j2
+      target: skills/github-dev-environments/templates/devcontainer.json.j2
+    - source: github-dev-environments/templates/devbox.json.j2
+      target: skills/github-dev-environments/templates/devbox.json.j2
+    - source: github-dev-environments/templates/post-create.sh.j2
+      target: skills/github-dev-environments/templates/post-create.sh.j2
     - source: frontend-project-setup/SKILL.md
       target: skills/frontend-project-setup/SKILL.md
     - source: frontend-project-setup/templates/package.json.j2
